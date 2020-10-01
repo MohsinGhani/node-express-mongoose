@@ -129,6 +129,8 @@ app.get("/volunteer/:vid", function (req, res) {
     db.Volunteer.findOne({ _id: req.params.vid })
         // ..and populate all of the address associated with it
         .populate("address")
+        .populate("followers")
+        .populate("following")
         .then(function (dbVolunteer) {
             // If we were able to successfully find an Volunteer with the given id, send it back to the client
             return res.send({
@@ -161,26 +163,51 @@ app.get("/address/:aid", function (req, res) {
         });
 });
 
-// app.post('/update-volunteer', (req, res) => {
-//     const { body } = req;
-//     let { name, _id } = body;
-//     console.log("name", name)
-//     var myquery = { _id };
-//     var newvalues = { $set: { name } };
-//     Volunteer.updateOne(myquery, newvalues, (error, volunteer) => {
-//         if (error) {
-//             return res.send({
-//                 success: false,
-//                 message: error,
-//             });
-//         }
-//         return res.send({
-//             success: true,
-//             message: 'volunteer has been updated!',
-//             data: volunteer
-//         });
-//     });
-// })
+// Route for Follow Volunteer
+app.post("/follow/:aid", function (req, res) {
+    // Using the aid passed in the aid parameter, prepare a query that finds the matching one in our db...
+    console.log({ _id: req.params.aid }, { followers: [req.body.aid] })
+
+    Promise.all([
+        db.Volunteer.updateOne({ _id: req.params.aid }, { $push: { followers: req.body.aid } }),
+        db.Volunteer.updateOne({ _id: req.body.aid }, { $push: { following: req.params.aid } })
+    ])
+        .then((dbVolunteer) => {
+            // If we were able to successfully find an Address with the given id, send it back to the client
+            return res.send({
+                success: true,
+                message: 'volunteer',
+                data: dbVolunteer
+            });
+        })
+        .catch(function (err) {
+            // If an error occurred, send it to the client
+            res.json(err);
+        });
+});
+
+// Route for Unfollow Volunteer
+app.post("/unfollow/:aid", function (req, res) {
+    // Using the aid passed in the aid parameter, prepare a query that finds the matching one in our db...
+    console.log({ _id: req.params.aid }, { followers: [req.body.aid] })
+
+    Promise.all([
+        db.Volunteer.updateOne({ _id: req.params.aid }, { $pull: { followers: req.body.aid } }),
+        db.Volunteer.updateOne({ _id: req.body.aid }, { $pull: { following: req.params.aid } })
+    ])
+        .then((dbVolunteer) => {
+            // If we were able to successfully find an Address with the given id, send it back to the client
+            return res.send({
+                success: true,
+                message: 'volunteer',
+                data: dbVolunteer
+            });
+        })
+        .catch(function (err) {
+            // If an error occurred, send it to the client
+            res.json(err);
+        });
+});
 
 // Start the server
 app.listen(port, () => {

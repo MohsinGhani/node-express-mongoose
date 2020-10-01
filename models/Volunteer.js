@@ -12,7 +12,15 @@ const VolunteerSchema = new Schema({
   address: {
     type: Schema.Types.ObjectId,
     ref: "Address"
-  }
+  },
+  followers: [{
+    type: Schema.Types.ObjectId,
+    ref: "Volunteer"
+  }],
+  following: [{
+    type: Schema.Types.ObjectId,
+    ref: "Volunteer"
+  }]
 });
 
 // Create model from the schema
